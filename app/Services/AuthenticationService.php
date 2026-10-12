@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Services\Authentication;
+namespace App\Services;
 
+use App\Application\Auth\Exceptions\AuthenticationFailedException;
+use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
@@ -12,23 +14,23 @@ final class AuthenticationService
         string $password
     ): User {
         $user = User::query()
-            ->where('email', $email)
+            ->where('email', strtolower(trim($email)))
             ->first();
 
         if (
             ! $user ||
-            ! Hash::check($password, $user->password_hash)
+            ! Hash::check($password, $user->getPasswordHash())
         ) {
-            throw new \RuntimeException('Invalid credentials.');
+            throw new AuthenticationFailedException;
+        }
+
+        if (
+            $user->getStatus() !== UserStatus::Active ||
+            $user->getLockedUntil()?->isFuture()
+        ) {
+            throw new AuthenticationFailedException;
         }
 
         return $user;
-    }
-
-    public function createToken(User $user): string
-    {
-        return $user
-            ->createToken('auth-token')
-            ->plainTextToken;
     }
 }

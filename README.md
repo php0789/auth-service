@@ -87,7 +87,9 @@ Current implementation status:
 - Registration is implemented.
 - Request ID assignment and API validation envelopes are implemented.
 - User registration writes an outbox event atomically.
-- Login, tokens, verification, password reset, 2FA, RBAC, Redis, Kafka publishing, and auditing remain planned until implemented and tested.
+- Login verifies credentials, active account status, and temporary locks before issuing a short-lived RS256 access token.
+- Accounts with 2FA enabled stop after the password factor and receive no token; challenge creation and verification remain planned.
+- Refresh tokens, verification, password reset, complete 2FA, RBAC, Redis, Kafka publishing, and auditing remain planned until implemented and tested.
 
 ## 4. Registration
 
@@ -176,7 +178,7 @@ Refresh tokens must store a SHA-256 hash rather than the raw token, plus token/f
 | DELETE | `/api/v1/auth/sessions/{id}` | Yes | Revoke a device |
 | GET | `/api/v1/auth/.well-known/jwks.json` | No | Public signing keys |
 
-Only registration is currently implemented. The rest of the table defines planned contracts, not available routes.
+Registration and the password stage of login are currently implemented. The remaining rows define planned contracts, not available routes; the 2FA challenge must be implemented before 2FA-enabled accounts can complete login.
 
 ## 7. HTTP response contract
 

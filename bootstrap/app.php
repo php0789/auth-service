@@ -1,5 +1,6 @@
 <?php
 
+use App\Application\Auth\Exceptions\AuthenticationFailedException;
 use App\Application\Auth\Exceptions\EmailAlreadyRegisteredException;
 use App\Http\Middleware\AssignRequestId;
 use Illuminate\Foundation\Application;
@@ -19,6 +20,23 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(AssignRequestId::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(function (AuthenticationFailedException $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json([
+                'success' => false,
+                'error' => [
+                    'code' => 'INVALID_CREDENTIALS',
+                    'message' => $exception->getMessage(),
+                ],
+                'meta' => [
+                    'request_id' => $request->attributes->get('request_id'),
+                ],
+            ], 401);
+        });
+
         $exceptions->render(function (ValidationException $exception, Request $request) {
             if (! $request->is('api/*')) {
                 return null;
